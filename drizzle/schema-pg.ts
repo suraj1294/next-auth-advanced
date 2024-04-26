@@ -1,36 +1,36 @@
 import {
-  sqliteTable,
+  timestamp,
+  pgTable,
   text,
   primaryKey,
   integer,
-  int,
-} from "drizzle-orm/sqlite-core";
+  pgEnum,
+  boolean,
+} from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "@auth/core/adapters";
 
 export enum USER_ROLE {
   ADMIN = "Admin",
   USER = "User",
 }
+export const roleEnum = pgEnum("role", [USER_ROLE.ADMIN, USER_ROLE.USER]);
 
-export const users = sqliteTable("user", {
+export const users = pgTable("user", {
   id: text("id").notNull().primaryKey(),
   name: text("name"),
   email: text("email").notNull(),
-  emailVerified: int("emailVerified", { mode: "timestamp" }),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
   password: text("password"),
-  role: text("role")
-    .$type<USER_ROLE>()
-    .$default(() => USER_ROLE.USER),
-  isTwoFactorEnabled: int("isTwoFactorEnabled", { mode: "boolean" }).$default(
-    () => false
-  ),
+  role: roleEnum("role").$default(() => USER_ROLE.USER),
+  isTwoFactorEnabled: boolean("isTwoFactorEnabled").$default(() => false),
   image: text("image"),
 });
 
 export const InsertUser = users.$inferInsert;
 export const User = users.$inferSelect;
+export const UserRole = roleEnum.enumValues;
 
-export const accounts = sqliteTable(
+export const accounts = pgTable(
   "account",
   {
     userId: text("userId")
@@ -54,54 +54,54 @@ export const accounts = sqliteTable(
   })
 );
 
-export const sessions = sqliteTable("session", {
+export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").notNull().primaryKey(),
   userId: text("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expires: int("expires", { mode: "timestamp" }).notNull(),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
-export const verificationTokens = sqliteTable(
+export const verificationTokens = pgTable(
   "verificationToken",
   {
     id: text("id").notNull(),
     email: text("email").notNull(),
     token: text("token").notNull().unique(),
-    expires: int("expires", { mode: "timestamp" }).notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.id, vt.token] }),
   })
 );
 
-export const passwordResetTokens = sqliteTable(
+export const passwordResetTokens = pgTable(
   "passwordResetToken",
   {
     id: text("id").notNull(),
     email: text("email").notNull(),
     token: text("token").notNull().unique(),
-    expires: int("expires", { mode: "timestamp" }).notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.id, vt.token] }),
   })
 );
 
-export const twoFactorTokens = sqliteTable(
+export const twoFactorTokens = pgTable(
   "twoFactorToken",
   {
     id: text("id").notNull(),
     email: text("email").notNull(),
     token: text("token").notNull().unique(),
-    expires: int("expires", { mode: "timestamp" }).notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.id, vt.token] }),
   })
 );
 
-export const twoFactorConfirmations = sqliteTable("twoFactorConfirmation", {
+export const twoFactorConfirmations = pgTable("twoFactorConfirmation", {
   id: text("id").notNull().primaryKey(),
   userId: text("user_id")
     .unique()

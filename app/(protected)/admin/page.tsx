@@ -5,7 +5,7 @@ import { RoleGate } from "@/components/auth/role-gate";
 import { FormSuccess } from "@/components/form-success";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { USER_ROLE, UserRole } from "@/drizzle/schema";
+import { USER_ROLE } from "@/drizzle/schema";
 
 import { toast } from "sonner";
 
