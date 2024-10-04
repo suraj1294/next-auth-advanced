@@ -1,15 +1,14 @@
 import { db } from "@/drizzle/db";
-import { twoFactorConfirmations, twoFactorTokens } from "@/drizzle/schema";
+import { twoFactorTokens } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 
-export const getTwoFactorConfirmationByUserId = async (userId: string) => {
+export const getTwoFactorTokenByToken = async (token: string) => {
   try {
-    const twoFactorConfirmation =
-      await db.query.twoFactorConfirmations.findFirst({
-        where: eq(twoFactorConfirmations.userId, userId),
-      });
+    const twoFactorToken = await db.query.twoFactorTokens.findFirst({
+      where: eq(twoFactorTokens.token, token),
+    });
 
-    return twoFactorConfirmation;
+    return twoFactorToken;
   } catch {
     return null;
   }

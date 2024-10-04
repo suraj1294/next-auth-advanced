@@ -60,6 +60,10 @@ export const LoginForm = () => {
             form.reset();
             setSuccess(data.success);
           }
+
+          if (data?.twoFactor) {
+            setShowTwoFactor(true);
+          }
         })
         .catch(() => setError("Something went wrong"));
     });

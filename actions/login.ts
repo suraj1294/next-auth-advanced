@@ -9,9 +9,17 @@ import { LoginSchema } from "@/schemas";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { db } from "@/drizzle/db";
 import { eq } from "drizzle-orm";
-import { users } from "@/drizzle/schema";
-import { generateVerificationToken } from "@/lib/token";
-import { sendVerificationEmail } from "@/lib/mail";
+import {
+  twoFactorConfirmations,
+  twoFactorTokens,
+  users,
+} from "@/drizzle/schema";
+import { generateTwoFactorToken, generateVerificationToken } from "@/lib/token";
+import { sendTwoFactorTokenEmail, sendVerificationEmail } from "@/lib/mail";
+import {
+  getTwoFactorConfirmationByUserId,
+  getTwoFactorTokenByEmail,
+} from "@/data/two-factor-confirmation";
 
 export const login = async (
   values: z.infer<typeof LoginSchema>,
@@ -23,7 +31,7 @@ export const login = async (
     return { error: "Invalid fields!" };
   }
 
-  const { email, password } = validatedFields.data;
+  const { email, password, code } = validatedFields.data;
 
   const existingUser = await db.query.users.findFirst({
     where: eq(users.email, email),
@@ -44,6 +52,49 @@ export const login = async (
     );
 
     return { success: "Confirmation email sent!" };
+  }
+
+  if (existingUser.isTwoFactorEnabled && existingUser.email) {
+    if (code) {
+      const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
+
+      if (!twoFactorToken) {
+        return { error: "Invalid code!" };
+      }
+
+      if (twoFactorToken.token !== code) {
+        return { error: "Invalid code!" };
+      }
+
+      const hasExpired = new Date(twoFactorToken.expires) < new Date();
+
+      if (hasExpired) {
+        return { error: "Code expired!" };
+      }
+
+      await db
+        .delete(twoFactorTokens)
+        .where(eq(twoFactorTokens.id, twoFactorToken.id));
+
+      const existingConfirmation = await getTwoFactorConfirmationByUserId(
+        existingUser.id
+      );
+
+      if (existingConfirmation) {
+        await db
+          .delete(twoFactorConfirmations)
+          .where(eq(twoFactorConfirmations.id, existingConfirmation.id));
+      }
+
+      await db.insert(twoFactorConfirmations).values({
+        id: crypto.randomUUID(),
+        userId: existingUser.id,
+      });
+    } else {
+      const twoFactorToken = await generateTwoFactorToken(existingUser.email);
+      await sendTwoFactorTokenEmail(twoFactorToken.email, twoFactorToken.token);
+      return { twoFactor: true };
+    }
   }
 
   try {

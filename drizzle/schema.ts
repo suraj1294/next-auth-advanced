@@ -6,6 +6,7 @@ import {
   int,
 } from "drizzle-orm/sqlite-core";
 import type { AdapterAccount } from "@auth/core/adapters";
+import { relations } from "drizzle-orm";
 
 export enum USER_ROLE {
   ADMIN = "Admin",
@@ -26,6 +27,10 @@ export const users = sqliteTable("user", {
   ),
   image: text("image"),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(sessions),
+}));
 
 export const InsertUser = users.$inferInsert;
 export const User = users.$inferSelect;
@@ -61,6 +66,13 @@ export const sessions = sqliteTable("session", {
     .references(() => users.id, { onDelete: "cascade" }),
   expires: int("expires", { mode: "timestamp" }).notNull(),
 });
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
 
 export const verificationTokens = sqliteTable(
   "verificationToken",
@@ -102,9 +114,19 @@ export const twoFactorTokens = sqliteTable(
 );
 
 export const twoFactorConfirmations = sqliteTable("twoFactorConfirmation", {
-  id: text("id").notNull().primaryKey(),
+  id: text("id").notNull(),
   userId: text("user_id")
     .unique()
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
 });
+
+export const twoFactorConfirmationsRelation = relations(
+  twoFactorConfirmations,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [twoFactorConfirmations.userId],
+      references: [users.id],
+    }),
+  })
+);
