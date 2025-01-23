@@ -75,10 +75,9 @@ RESEND_API_KEY=
 NEXT_PUBLIC_APP_URL=
 ```
 
-### Setup Prisma
+### Setup Drizzle
 ```shell
-npx prisma generate
-npx prisma db push
+npx drizzle-kit push
 ```
 
 ### Start the app
