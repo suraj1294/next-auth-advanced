@@ -1,8 +1,8 @@
-# Next Auth v5 - Advanced Guide (2024)
+# Next Auth v5 - Advanced Guide
 
 
 
-This is a repository for Next Auth v5 - Advanced Guide (2024)
+This is a repository for Next Auth v5 - Advanced Guide
 
 
 Key Features:
