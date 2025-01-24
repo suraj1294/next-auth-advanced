@@ -3,8 +3,8 @@
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useTransition, useState, useEffect } from "react";
+import { getSession, useSession } from "next-auth/react";
 
 import { Switch } from "@/components/ui/switch";
 import {
@@ -32,9 +32,16 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { USER_ROLE } from "@/drizzle/schema";
+import { useRouter } from "next/navigation";
+import { Session } from "next-auth";
+import { Loader2 } from "lucide-react";
 
 const SettingsPage = () => {
-  const user = useCurrentUser();
+  //const user = useCurrentUser();
+
+  const router = useRouter();
+
+  const [user, setUser] = useState<Session["user"] | null>(null);
 
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
@@ -69,6 +76,30 @@ const SettingsPage = () => {
         .catch(() => setError("Something went wrong!"));
     });
   };
+
+  useEffect(() => {
+    (async () => {
+      if (!user) {
+        const session = await getSession();
+        setUser(session?.user || null);
+        form.reset({
+          name: session?.user?.name || undefined,
+          email: session?.user?.email || undefined,
+          role: session?.user?.role || undefined,
+          isTwoFactorEnabled: session?.user?.isTwoFactorEnabled || undefined,
+        });
+        if (!session) {
+          router.push("/auth/login");
+        }
+      }
+    })();
+  }, [form, router, user]);
+
+  console.log(user);
+
+  if (!user) {
+    return <Loader2 className="animate-spin" />;
+  }
 
   return (
     <Card className="w-[600px]">
