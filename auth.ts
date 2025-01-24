@@ -2,7 +2,12 @@ import NextAuth, { Session, type DefaultSession } from "next-auth";
 import authConfig from "./auth.config";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "./drizzle/db";
-import { twoFactorConfirmations, USER_ROLE, users } from "./drizzle/schema";
+import {
+  accounts,
+  twoFactorConfirmations,
+  USER_ROLE,
+  users,
+} from "./drizzle/schema";
 import { eq } from "drizzle-orm";
 import { getTwoFactorConfirmationByUserId } from "./data/two-factor-confirmation";
 
@@ -97,8 +102,8 @@ export const {
 
       if (!existingUser) return token;
 
-      const existingAccount = await db.query.users.findFirst({
-        where: eq(users.id, existingUser.id),
+      const existingAccount = await db.query.accounts.findFirst({
+        where: eq(accounts.userId, existingUser.id),
       });
 
       token.isOAuth = !!existingAccount;
