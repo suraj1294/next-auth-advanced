@@ -51,12 +51,12 @@ const SettingsPage = () => {
   const form = useForm<z.infer<typeof SettingsSchema>>({
     resolver: zodResolver(SettingsSchema),
     defaultValues: {
-      password: undefined,
-      newPassword: undefined,
+      password: "",
+      newPassword: "",
       name: user?.name || undefined,
       email: user?.email || undefined,
       role: user?.role || undefined,
-      isTwoFactorEnabled: user?.isTwoFactorEnabled || undefined,
+      isTwoFactorEnabled: user?.isTwoFactorEnabled || false,
     },
   });
 
